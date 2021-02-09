@@ -20,10 +20,15 @@ using System.Threading;
 
 namespace HidSharp.Reports.Input
 {
+    public class ByteEventArgs : EventArgs
+    {
+        public byte[] Bytes { get; set; }
+    }
+
     public class HidDeviceInputReceiver
     {
         public event EventHandler Started;
-        public event EventHandler Received;
+        public event EventHandler<ByteEventArgs> Received;
         public event EventHandler Stopped;
 
         byte[] _buffer; int _bufferOffset, _bufferCount;
@@ -117,22 +122,22 @@ namespace HidSharp.Reports.Input
         {
             Throw.If.Null(buffer, "buffer").OutOfRange(buffer, offset, count);
 
-            lock (_syncRoot)
-            {
-                if (_maxInputReportLength == 0) { return; } // Nothing to parse.
+            //lock (_syncRoot)
+            //{
+            //    if (_maxInputReportLength == 0) { return; } // Nothing to parse.
 
-                int neededLength = checked(_bufferCount + count);
-                int bufferLength = _buffer.Length;
-                while (bufferLength < neededLength) { bufferLength = checked(bufferLength * 2); }
-                Array.Resize(ref _buffer, bufferLength);
+            //    int neededLength = checked(_bufferCount + count);
+            //    int bufferLength = _buffer.Length;
+            //    while (bufferLength < neededLength) { bufferLength = checked(bufferLength * 2); }
+            //    Array.Resize(ref _buffer, bufferLength);
 
-                Array.Copy(buffer, 0, _buffer, _bufferCount, count);
-                _bufferCount += count;
-                _waitHandle.Set();
-            }
+            //    Array.Copy(buffer, 0, _buffer, _bufferCount, count);
+            //    _bufferCount += count;
+            //    _waitHandle.Set();
+            //}
 
             var ev = Received;
-            if (ev != null) { ev(this, EventArgs.Empty); }
+            if (ev != null) { ev(this, new ByteEventArgs {Bytes= buffer }); }
         }
 
         /// <summary>
@@ -142,54 +147,54 @@ namespace HidSharp.Reports.Input
         /// <param name="offset">The offset to begin writing the report at.</param>
         /// <param name="report">The <see cref="HidSharp.Reports.Report"/> the buffer conforms to.</param>
         /// <returns><c>true</c> if there was a pending report.</returns>
-        public bool TryRead(byte[] buffer, int offset, out Report report)
-        {
-            Throw.If.Null(buffer).OutOfRange(buffer, offset, _maxInputReportLength);
+        //public bool TryRead(byte[] buffer, int offset, out Report report)
+        //{
+        //    Throw.If.Null(buffer).OutOfRange(buffer, offset, _maxInputReportLength);
 
-            lock (_syncRoot)
-            {
-                if (!_running)
-                {
-                    report = null; return false;
-                }
+        //    lock (_syncRoot)
+        //    {
+        //        if (!_running)
+        //        {
+        //            report = null; return false;
+        //        }
 
-                if (_bufferOffset >= _bufferCount)
-                {
-                    _waitHandle.Reset();
-                    report = null; return false;
-                }
+        //        if (_bufferOffset >= _bufferCount)
+        //        {
+        //            _waitHandle.Reset();
+        //            report = null; return false;
+        //        }
 
-                if (!_reportDescriptor.TryGetReport(ReportType.Input, _buffer[_bufferOffset], out report))
-                {
-                    // Unknown report!
-                    ClearReceivedData();
-                    report = null; return false;
-                }
+        //        if (!_reportDescriptor.TryGetReport(ReportType.Input, _buffer[_bufferOffset], out report))
+        //        {
+        //            // Unknown report!
+        //            ClearReceivedData();
+        //            report = null; return false;
+        //        }
 
-                int reportLength = report.Length;
-                int finalBufferOffset = _bufferOffset + reportLength;
-                if (finalBufferOffset > _bufferCount)
-                {
-                    // Not completely received!
-                    _waitHandle.Reset();
-                    report = null; return false;
-                }
+        //        int reportLength = report.Length;
+        //        int finalBufferOffset = _bufferOffset + reportLength;
+        //        if (finalBufferOffset > _bufferCount)
+        //        {
+        //            // Not completely received!
+        //            _waitHandle.Reset();
+        //            report = null; return false;
+        //        }
 
-                Array.Copy(_buffer, _bufferOffset, buffer, offset, reportLength);
-                if (finalBufferOffset == _bufferCount)
-                {
-                    // Nothing more to read!
-                    ClearReceivedData();
-                }
-                else
-                {
-                    // There is more to read.
-                    _bufferOffset = finalBufferOffset;
-                }
+        //        Array.Copy(_buffer, _bufferOffset, buffer, offset, reportLength);
+        //        if (finalBufferOffset == _bufferCount)
+        //        {
+        //            // Nothing more to read!
+        //            ClearReceivedData();
+        //        }
+        //        else
+        //        {
+        //            // There is more to read.
+        //            _bufferOffset = finalBufferOffset;
+        //        }
 
-                return true;
-            }
-        }
+        //        return true;
+        //    }
+        //}
 
         /// <summary>
         /// <c>true</c> if the receiver is running.
