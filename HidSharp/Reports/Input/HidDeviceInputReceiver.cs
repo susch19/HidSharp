@@ -49,6 +49,15 @@ namespace HidSharp.Reports.Input
             _waitHandle = new ManualResetEvent(true);
         }
 
+        public HidDeviceInputReceiver(int maxInputReportLength, ReportDescriptor reportDescriptor = null)
+        {
+            _maxInputReportLength = maxInputReportLength;
+            _buffer = new byte[_maxInputReportLength * 16];
+            _reportDescriptor = reportDescriptor;
+            _syncRoot = new object();
+            _waitHandle = new ManualResetEvent(true);
+        }
+
         // TODO: Handle the case where the library user is not calling TryRead fast enough for the HID device.
         /// <summary>
         /// Starts the receiver. It will continue until the stream is closed or the device is disconnected.
@@ -136,8 +145,7 @@ namespace HidSharp.Reports.Input
             //    _waitHandle.Set();
             //}
 
-            var ev = Received;
-            if (ev != null) { ev(this, new ByteEventArgs {Bytes= buffer }); }
+            Received?.Invoke(this, new ByteEventArgs { Bytes = buffer });
         }
 
         /// <summary>
