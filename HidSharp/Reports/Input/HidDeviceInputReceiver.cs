@@ -23,6 +23,8 @@ namespace HidSharp.Reports.Input
     public class ByteEventArgs : EventArgs
     {
         public byte[] Bytes { get; set; }
+        public int Count { get; internal set; }
+        public int Offset { get; internal set; }
     }
 
     public class HidDeviceInputReceiver
@@ -81,16 +83,34 @@ namespace HidSharp.Reports.Input
                 Action beginRead = null; AsyncCallback endRead = null;
                 beginRead = () =>
                 {
-                    try { stream.BeginRead(buffer, 0, buffer.Length, endRead, null); }
-                    catch { Stop(); return; }
+                    try
+                    {
+                        stream.BeginRead(buffer, 0, buffer.Length, endRead, null);
+                    }
+                    catch
+                    {
+                        Stop();
+                        return;
+                    }
                 };
                 endRead = ar =>
                 {
                     int count;
-                    try { count = stream.EndRead(ar); }
-                    catch { Stop(); return; }
+                    try
+                    {
+                        count = stream.EndRead(ar);
+                    }
+                    catch
+                    {
+                        Stop();
+                        return;
+                    }
 
-                    if (count == 0) { Stop(); return; }
+                    if (count == 0)
+                    {
+                        Stop();
+                        return;
+                    }
 
                     ProvideReceivedData(buffer, 0, count);
                     beginRead();
@@ -145,7 +165,7 @@ namespace HidSharp.Reports.Input
             //    _waitHandle.Set();
             //}
 
-            Received?.Invoke(this, new ByteEventArgs { Bytes = buffer });
+            Received?.Invoke(this, new ByteEventArgs { Bytes = buffer, Offset = offset, Count = count });
         }
 
         /// <summary>
