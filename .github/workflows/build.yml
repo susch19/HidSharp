@@ -22,13 +22,18 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.100-rc.1.20452.10
+        dotnet-version: 5.0.x
     - name: Get Git Submodules
       run: git submodule update --init --recursive
     - name: Build
       run: dotnet build --configuration Release
     - name: Create Nuget Package
       run: dotnet pack -c Release -o ./artifacts
+    - name: Publish Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: noobsawrm.hidsharp.nupkg
+        path: ./artifacts/'*.nupkg'
     - name: Deploy Nuget Package
       run: dotnet nuget push ./artifacts/'*.nupkg' -k $NUGET_API_KEY -s https://api.nuget.org/v3/index.json
       shell: bash
