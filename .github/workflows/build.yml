@@ -32,4 +32,5 @@ jobs:
     - name: Deploy Nuget Package
       run: dotnet nuget push ./artifacts/'*.nupkg' -k $NUGET_API_KEY -s https://api.nuget.org/v3/index.json
       shell: bash
+      continue-on-error: true
       if: matrix.os == 'ubuntu-latest'
