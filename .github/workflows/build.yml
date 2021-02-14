@@ -33,7 +33,6 @@ jobs:
       uses: actions/upload-artifact@v2
       if: matrix.os == 'ubuntu-latest'
       with:
-        name: noobsawrm.hidsharp.nupkg
         path: ./artifacts/*.nupkg
     - name: Deploy Nuget Package
       run: dotnet nuget push ./artifacts/'*.nupkg' -k $NUGET_API_KEY -s https://api.nuget.org/v3/index.json
